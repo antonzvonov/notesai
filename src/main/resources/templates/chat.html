@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Чат</title>
+</head>
+<body>
+<h1>Чат</h1>
+<form method="post" enctype="multipart/form-data" th:action="@{/chat}">
+    <input type="text" name="message" placeholder="Сообщение" required />
+    <input type="file" name="file" />
+    <button type="submit">Отправить</button>
+</form>
+<div th:if="${response}">
+    <p th:text="${response}"></p>
+    <pre th:if="${fileContent}" th:text="${fileContent}"></pre>
+</div>
+</body>
+</html>
