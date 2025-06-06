@@ -1,8 +1,10 @@
 package ge.azvonov.notesai;
 
+
 import com.openai.client.OpenAI;
 import com.openai.client.embeddings.EmbeddingsRequest;
 import com.openai.client.embeddings.EmbeddingsResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ public class EmbeddingService {
 
     public EmbeddingService(@Value("${openai.api.key}") String apiKey) {
         this.openAI = new OpenAI(apiKey);
+
     }
 
     public List<TextEmbedding> embedText(String content) {
@@ -31,11 +34,13 @@ public class EmbeddingService {
     }
 
     private List<Double> fetchEmbedding(String text) {
+
         EmbeddingsRequest request = EmbeddingsRequest.builder()
                 .model("text-embedding-ada-002")
                 .input(List.of(text))
                 .build();
         EmbeddingsResponse response = openAI.embeddings().create(request);
+
         return response.getData().get(0).getEmbedding();
     }
 
