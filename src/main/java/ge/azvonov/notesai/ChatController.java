@@ -1,5 +1,6 @@
 package ge.azvonov.notesai;
 
+import ge.azvonov.notesai.EmbeddingService.TextEmbedding;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +22,12 @@ public class ChatController {
 
     private final ChatMessageRepository repository;
 
+    private final EmbeddingService embeddingService;
+
     @Autowired
-    public ChatController(ChatMessageRepository repository) {
+    public ChatController(ChatMessageRepository repository, EmbeddingService embeddingService) {
         this.repository = repository;
+        this.embeddingService = embeddingService;
     }
 
     @GetMapping("/chat")
@@ -42,10 +46,13 @@ public class ChatController {
         if (file != null && !file.isEmpty()) {
             fileName = file.getOriginalFilename();
             fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+            List<TextEmbedding> textEmbeddings = embeddingService.embedText(fileContent);
+
+            int i = 0;
         }
         String responseText = "Вы сказали: " + message + ", файл: " + fileName;
         model.addAttribute("response", responseText);
-        model.addAttribute("fileContent", fileContent);
+        model.addAttribute("fileContent", "это ответ");
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessage(message);
