@@ -15,5 +15,13 @@
     <p th:text="${response}"></p>
     <pre th:if="${fileContent}" th:text="${fileContent}"></pre>
 </div>
+<h2>История сообщений</h2>
+<ul>
+    <li th:each="msg : ${messages}">
+        <span th:text="${msg.timestamp}"></span> :
+        <strong th:text="${msg.message}"></strong>
+        <em th:text="${msg.response}"></em>
+    </li>
+</ul>
 </body>
 </html>
