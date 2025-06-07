@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Проекты</title>
+</head>
+<body>
+<h1>Проекты</h1>
+<form th:action="@{/projects/add}" method="post">
+    <input type="text" name="name" placeholder="Название" />
+    <button type="submit">Добавить</button>
+</form>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Название</th>
+        <th>Действия</th>
+    </tr>
+    <tr th:each="proj : ${projects}">
+        <td th:text="${proj.id}"></td>
+        <td th:text="${proj.name}"></td>
+        <td>
+            <form th:action="@{/projects/delete}" method="post" style="display:inline;">
+                <input type="hidden" name="id" th:value="${proj.id}" />
+                <button type="submit">Удалить</button>
+            </form>
+            <a th:href="@{'/projects/edit/' + ${proj.id}}">Редактировать</a>
+        </td>
+    </tr>
+</table>
+<p><a th:href="@{/chat}">К чату</a></p>
+</body>
+</html>

@@ -6,7 +6,11 @@
 </head>
 <body>
 <h1>Чат</h1>
+<p><a th:href="@{/projects}">Управление проектами</a></p>
 <form method="post" enctype="multipart/form-data" th:action="@{/chat}">
+    <select name="projectId">
+        <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+    </select>
     <input type="text" name="message" placeholder="Сообщение" />
     <input type="file" name="file" />
     <button type="submit">Отправить</button>
@@ -21,6 +25,7 @@
         <span th:text="${msg.timestamp}"></span> :
         <strong th:text="${msg.message}"></strong>
         <em th:text="${msg.response}"></em>
+        <span th:text="${msg.project != null ? msg.project.name : 'Без проекта'}"></span>
     </li>
 </ul>
 </body>

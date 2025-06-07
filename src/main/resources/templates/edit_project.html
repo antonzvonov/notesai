@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Редактирование проекта</title>
+</head>
+<body>
+<h1>Редактировать проект</h1>
+<form th:action="@{/projects/edit}" method="post">
+    <input type="hidden" name="id" th:value="${project.id}" />
+    <input type="text" name="name" th:value="${project.name}" />
+    <button type="submit">Сохранить</button>
+</form>
+<p><a th:href="@{/projects}">Назад</a></p>
+</body>
+</html>
