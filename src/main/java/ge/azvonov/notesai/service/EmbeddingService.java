@@ -1,4 +1,4 @@
-package ge.azvonov.notesai;
+package ge.azvonov.notesai.service;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
