@@ -70,7 +70,7 @@ public class ChatController {
             if (dot >= 0) {
                 ext = fileName.substring(dot + 1);
             }
-            long fileId = sqLiteVectorService.saveFileMetadata(fileName, ext);
+            long fileId = sqLiteVectorService.saveFileMetadata(projectId, fileName, ext);
             List<TextEmbedding> textEmbeddings = embeddingService.embedText(fileContent);
             for (TextEmbedding chunk : textEmbeddings) {
                 sqLiteVectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
@@ -83,7 +83,7 @@ public class ChatController {
 
         if (StringUtils.hasLength(message)) {
             List<TextEmbedding> textEmbeddings = embeddingService.embedText(message);
-            List<SQLiteVectorService.SearchResult> context = sqLiteVectorService.findTop10ByCosine(textEmbeddings.get(0).vector());
+            List<SQLiteVectorService.SearchResult> context = sqLiteVectorService.findTop10ByCosine(projectId, textEmbeddings.get(0).vector());
             List<String> chunks = context.stream().map(SQLiteVectorService.SearchResult::text).toList();
             answer = chatService.askWithContext(chunks, message);
             int i = 0;
