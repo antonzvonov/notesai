@@ -5,6 +5,8 @@ import ge.azvonov.notesai.service.ChatService;
 import ge.azvonov.notesai.service.EmbeddingService;
 import ge.azvonov.notesai.service.EmbeddingService.TextEmbedding;
 import ge.azvonov.notesai.db.SQLiteVectorService;
+import ge.azvonov.notesai.db.ProjectRepository;
+import ge.azvonov.notesai.Project;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -30,23 +32,32 @@ public class ChatController {
 
     private final ChatService chatService;
 
+    private final ProjectRepository projectRepository;
+
     @Autowired
-    public ChatController(ChatMessageRepository repository, EmbeddingService embeddingService, SQLiteVectorService sqLiteVectorService, ChatService chatService) {
+    public ChatController(ChatMessageRepository repository,
+                         EmbeddingService embeddingService,
+                         SQLiteVectorService sqLiteVectorService,
+                         ChatService chatService,
+                         ProjectRepository projectRepository) {
         this.repository = repository;
         this.embeddingService = embeddingService;
         this.sqLiteVectorService = sqLiteVectorService;
         this.chatService = chatService;
+        this.projectRepository = projectRepository;
     }
 
     @GetMapping("/chat")
     public String chat(Model model) {
         List<ChatMessage> messages = repository.findAll();
         model.addAttribute("messages", messages);
+        model.addAttribute("projects", projectRepository.findAll());
         return "chat";
     }
 
     @PostMapping("/chat")
     public String handleChat(@RequestParam("message") String message,
+                             @RequestParam("projectId") Long projectId,
                              @RequestParam(value = "file", required = false) MultipartFile file,
                              Model model) throws IOException {
         String fileName = "без файла";
@@ -54,7 +65,12 @@ public class ChatController {
         if (file != null && !file.isEmpty()) {
             fileName = file.getOriginalFilename();
             fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);
-            long fileId = sqLiteVectorService.saveFileMetadata(fileName, fileContent);
+            String ext = "";
+            int dot = fileName.lastIndexOf('.');
+            if (dot >= 0) {
+                ext = fileName.substring(dot + 1);
+            }
+            long fileId = sqLiteVectorService.saveFileMetadata(fileName, ext);
             List<TextEmbedding> textEmbeddings = embeddingService.embedText(fileContent);
             for (TextEmbedding chunk : textEmbeddings) {
                 sqLiteVectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
@@ -78,11 +94,13 @@ public class ChatController {
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessage(message);
-        chatMessage.setResponse(responseText);
+        chatMessage.setResponse(answer);
+        projectRepository.findById(projectId).ifPresent(chatMessage::setProject);
         repository.save(chatMessage);
 
         List<ChatMessage> messages = repository.findAll();
         model.addAttribute("messages", messages);
+        model.addAttribute("projects", projectRepository.findAll());
         return "chat";
     }
 }
