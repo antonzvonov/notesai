@@ -23,6 +23,7 @@ public class SQLiteVectorService {
             try (Statement st = connection.createStatement()) {
                 st.executeUpdate("CREATE TABLE IF NOT EXISTS file_metadata (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "project_id INTEGER NOT NULL, " +
                         "name TEXT NOT NULL, " +
                         "extension TEXT NOT NULL)");
                 st.executeUpdate("CREATE TABLE IF NOT EXISTS file_chunks (" +
@@ -53,11 +54,12 @@ public class SQLiteVectorService {
         }
     }
 
-    public long saveFileMetadata(String name, String extension) {
-        String sql = "INSERT INTO file_metadata(name, extension) VALUES(?, ?)";
+    public long saveFileMetadata(long projectId, String name, String extension) {
+        String sql = "INSERT INTO file_metadata(project_id, name, extension) VALUES(?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, name);
-            ps.setString(2, extension);
+            ps.setLong(1, projectId);
+            ps.setString(2, name);
+            ps.setString(3, extension);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -100,14 +102,17 @@ public class SQLiteVectorService {
      * Ищет топ-10 фрагментов в таблице file_chunks по косинусному сходству
      * к переданному вектору queryVector.
      */
-    public List<SearchResult> findTop10ByCosine(List<Float> queryVector) {
+    public List<SearchResult> findTop10ByCosine(long projectId, List<Float> queryVector) {
         // вычисляем норму вектора запроса
         double normQ = Math.sqrt(queryVector.stream()
                 .mapToDouble(f -> f * f)
                 .sum());
 
-        String sql = "SELECT id, text, vector FROM file_chunks";
+        String sql = "SELECT fc.id, fc.text, fc.vector FROM file_chunks fc " +
+                "JOIN file_metadata fm ON fc.file_id = fm.id " +
+                "WHERE fm.project_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, projectId);
             try (ResultSet rs = ps.executeQuery()) {
                 // используем минимальную кучу на 10 элементов
                 PriorityQueue<SearchResult> pq = new PriorityQueue<>(
