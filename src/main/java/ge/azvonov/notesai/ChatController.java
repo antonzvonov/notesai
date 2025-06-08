@@ -4,7 +4,7 @@ import ge.azvonov.notesai.db.ChatMessageRepository;
 import ge.azvonov.notesai.service.ChatService;
 import ge.azvonov.notesai.service.EmbeddingService;
 import ge.azvonov.notesai.service.EmbeddingService.TextEmbedding;
-import ge.azvonov.notesai.db.SQLiteVectorService;
+import ge.azvonov.notesai.db.VectorService;
 import ge.azvonov.notesai.db.ProjectRepository;
 import ge.azvonov.notesai.Project;
 import org.springframework.stereotype.Controller;
@@ -28,7 +28,7 @@ public class ChatController {
 
     private final EmbeddingService embeddingService;
 
-    private final SQLiteVectorService sqLiteVectorService;
+    private final VectorService vectorService;
 
     private final ChatService chatService;
 
@@ -37,12 +37,12 @@ public class ChatController {
     @Autowired
     public ChatController(ChatMessageRepository repository,
                          EmbeddingService embeddingService,
-                         SQLiteVectorService sqLiteVectorService,
+                         VectorService vectorService,
                          ChatService chatService,
                          ProjectRepository projectRepository) {
         this.repository = repository;
         this.embeddingService = embeddingService;
-        this.sqLiteVectorService = sqLiteVectorService;
+        this.vectorService = vectorService;
         this.chatService = chatService;
         this.projectRepository = projectRepository;
     }
@@ -70,10 +70,10 @@ public class ChatController {
             if (dot >= 0) {
                 ext = fileName.substring(dot + 1);
             }
-            long fileId = sqLiteVectorService.saveFileMetadata(projectId, fileName, ext);
+            long fileId = vectorService.saveFileMetadata(projectId, fileName, ext);
             List<TextEmbedding> textEmbeddings = embeddingService.embedText(fileContent);
             for (TextEmbedding chunk : textEmbeddings) {
-                sqLiteVectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
+                vectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
             }
             int i = 0;
         }
@@ -83,8 +83,8 @@ public class ChatController {
 
         if (StringUtils.hasLength(message)) {
             List<TextEmbedding> textEmbeddings = embeddingService.embedText(message);
-            List<SQLiteVectorService.SearchResult> context = sqLiteVectorService.findTop10ByCosine(projectId, textEmbeddings.get(0).vector());
-            List<String> chunks = context.stream().map(SQLiteVectorService.SearchResult::text).toList();
+            List<VectorService.SearchResult> context = vectorService.findTop10ByCosine(projectId, textEmbeddings.get(0).vector());
+            List<String> chunks = context.stream().map(VectorService.SearchResult::text).toList();
             answer = chatService.askWithContext(chunks, message);
             int i = 0;
         }
