@@ -3,7 +3,9 @@ package ge.azvonov.notesai.db;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.sql.DataSource;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.*;
@@ -13,33 +15,21 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 @Service
-public class SQLiteVectorService {
+public class VectorService {
+    private final DataSource dataSource;
     private Connection connection;
+
+    @Autowired
+    public VectorService(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     @PostConstruct
     public void init() {
         try {
-            connection = DriverManager.getConnection("jdbc:sqlite:notes.db");
-            try (Statement st = connection.createStatement()) {
-                st.executeUpdate("CREATE TABLE IF NOT EXISTS file_metadata (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "project_id INTEGER NOT NULL, " +
-                        "name TEXT NOT NULL, " +
-                        "extension TEXT NOT NULL)");
-                st.executeUpdate("CREATE TABLE IF NOT EXISTS file_chunks (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        "file_id INTEGER NOT NULL, " +
-                        "text TEXT NOT NULL, " +
-                        "vector BLOB NOT NULL, " +
-                        "FOREIGN KEY(file_id) REFERENCES file_metadata(id))");
-                try {
-                    st.execute("SELECT load_extension('vector0')");
-                } catch (SQLException ignore) {
-                    // Расширение может быть уже загружено или отсутствовать
-                }
-            }
+            connection = dataSource.getConnection();
         } catch (SQLException e) {
-            throw new RuntimeException("Не удалось инициализировать SQLite", e);
+            throw new RuntimeException("Не удалось открыть соединение", e);
         }
     }
 
