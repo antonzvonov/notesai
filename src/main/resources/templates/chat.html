@@ -7,6 +7,9 @@
 <body>
 <h1>Чат</h1>
 <p><a th:href="@{/projects}">Управление проектами</a></p>
+<form th:action="@{/logout}" method="post" style="display:inline;">
+    <button type="submit">Выйти</button>
+</form>
 <form method="post" enctype="multipart/form-data" th:action="@{/chat}">
     <select name="projectId">
         <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
