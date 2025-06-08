@@ -36,8 +36,8 @@ public class ChatService {
         // 2) Жёсткий системный промт
         String systemPrompt = """
             You are a helpful assistant.
-            Answer the user's question using ONLY the information provided in the context.
-            If the answer is not contained in the context, reply "I don't know."
+            Answer the user's question using strictly ONLY the information provided in the context.
+            If the answer is not contained in the context or context is empty, reply "Я не знаю."
             """;
 
         // 3) Промт от пользователя с контекстом и собственно вопросом

@@ -90,7 +90,7 @@ public class ChatController {
         }
 
         model.addAttribute("response", responseText);
-        model.addAttribute("fileContent", answer);
+        model.addAttribute("answer", answer);
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessage(message);
