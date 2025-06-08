@@ -6,9 +6,9 @@
 </head>
 <body>
 <h1>Вход</h1>
-<form th:action="@{/login}" method="post">
-    <input type="email" name="username" placeholder="Email" required />
-    <input type="password" name="password" placeholder="Пароль" required />
+<form th:action="@{/perform_login}" method="post">
+    <input type="text" name="username" placeholder="Email"/>
+    <input type="password" name="password" placeholder="Password"/>
     <button type="submit">Войти</button>
 </form>
 <p><a th:href="@{/register}">Регистрация</a></p>
