@@ -31,12 +31,15 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Check SSH
+        run: hostname && whoami
+    
       - name: Deploy on server via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
-          username: deploy
-          password: ${{ secrets.SERVER_PASSWORD }}
+          username: root
+          password: ${{ secrets.R_SERVER_PASSWORD }}
           script: |
             docker pull azvonovge/notesai:${{ github.sha }}
             docker stop notesai || true
