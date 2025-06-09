@@ -10,13 +10,12 @@
 <form th:action="@{/logout}" method="post" style="display:inline;">
     <button type="submit">Выйти</button>
 </form>
-<form method="post" enctype="multipart/form-data" th:action="@{/chat}">
+<form method="post" th:action="@{/chat}">
     <select name="projectId">
         <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
                 th:selected="${p.id == selectedProjectId}"></option>
     </select>
     <input type="text" name="message" placeholder="Сообщение" />
-    <input type="file" name="file" />
     <button type="submit">Отправить</button>
 </form>
 <div th:if="${response}">

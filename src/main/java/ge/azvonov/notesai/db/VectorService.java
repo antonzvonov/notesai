@@ -10,6 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.postgresql.util.PGobject;
+import ge.azvonov.notesai.db.FileMetadata;
 
 @Service
 public class VectorService {
@@ -121,6 +122,43 @@ public class VectorService {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка поиска по косинусу", e);
+        }
+    }
+
+    /**
+     * Возвращает список файлов проекта.
+     */
+    public List<FileMetadata> listFiles(long projectId) {
+        String sql = "SELECT id, name, extension FROM file_metadata WHERE project_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, projectId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<FileMetadata> files = new ArrayList<>();
+                while (rs.next()) {
+                    files.add(new FileMetadata(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getString("extension")));
+                }
+                return files;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка чтения файлов", e);
+        }
+    }
+
+    /**
+     * Удаляет файл и его фрагменты.
+     */
+    public void deleteFile(long fileId) {
+        try (PreparedStatement ps1 = connection.prepareStatement("DELETE FROM file_chunks WHERE file_id = ?");
+             PreparedStatement ps2 = connection.prepareStatement("DELETE FROM file_metadata WHERE id = ?")) {
+            ps1.setLong(1, fileId);
+            ps1.executeUpdate();
+            ps2.setLong(1, fileId);
+            ps2.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка удаления файла", e);
         }
     }
 
