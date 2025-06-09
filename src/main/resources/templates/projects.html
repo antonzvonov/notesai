@@ -15,6 +15,7 @@
         <th>ID</th>
         <th>Название</th>
         <th>Действия</th>
+        <th>Файлы</th>
     </tr>
     <tr th:each="proj : ${projects}">
         <td th:text="${proj.id}"></td>
@@ -25,6 +26,23 @@
                 <button type="submit">Удалить</button>
             </form>
             <a th:href="@{'/projects/edit/' + ${proj.id}}">Редактировать</a>
+        </td>
+        <td>
+            <form th:action="@{/projects/upload}" method="post" enctype="multipart/form-data" style="margin-bottom:5px;">
+                <input type="hidden" name="projectId" th:value="${proj.id}" />
+                <input type="file" name="file" />
+                <button type="submit">Загрузить</button>
+            </form>
+            <ul>
+                <li th:each="f : ${files[proj.id]}">
+                    <span th:text="${f.name}"></span>
+                    <form th:action="@{/projects/delete-file}" method="post" style="display:inline;">
+                        <input type="hidden" name="projectId" th:value="${proj.id}" />
+                        <input type="hidden" name="fileId" th:value="${f.id}" />
+                        <button type="submit">Удалить</button>
+                    </form>
+                </li>
+            </ul>
         </td>
     </tr>
 </table>

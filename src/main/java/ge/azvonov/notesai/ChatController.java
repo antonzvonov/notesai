@@ -17,13 +17,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Controller
 public class ChatController {
@@ -76,28 +74,10 @@ public class ChatController {
     @PostMapping("/chat")
     public String handleChat(@RequestParam("message") String message,
                              @RequestParam("projectId") Long projectId,
-                             @RequestParam(value = "file", required = false) MultipartFile file,
                              Model model) throws IOException {
         AppUser user = currentUser();
-        String fileName = "без файла";
-        String fileContent = null;
-        if (file != null && !file.isEmpty()) {
-            fileName = file.getOriginalFilename();
-            fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);
-            String ext = "";
-            int dot = fileName.lastIndexOf('.');
-            if (dot >= 0) {
-                ext = fileName.substring(dot + 1);
-            }
-            long fileId = vectorService.saveFileMetadata(projectId, fileName, ext);
-            List<TextEmbedding> textEmbeddings = embeddingService.embedText(fileContent);
-            for (TextEmbedding chunk : textEmbeddings) {
-                vectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
-            }
-            int i = 0;
-        }
 
-        String responseText = "Вы сказали: " + message + ", файл: " + fileName;
+        String responseText = "Вы сказали: " + message;
         String answer = "";
 
         if (StringUtils.hasLength(message)) {
