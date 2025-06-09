@@ -60,6 +60,9 @@
             border-top: 1px solid #dee2e6;
             background: #fff;
         }
+        .auto-resize {
+            overflow-y: hidden;
+        }
     </style>
 </head>
 <body>
@@ -74,7 +77,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center"
                     th:each="p : ${projects}"
                     th:classappend="${p.id == selectedProjectId}? 'active'">
-                    <span th:text="${p.name}">Название проекта</span>
+                    <a th:href="@{|/chat?projectId=${p.id}|}" class="text-decoration-none flex-grow-1" th:text="${p.name}"></a>
                     <i class="bi bi-chevron-right"></i>
                 </li>
             </ul>
@@ -86,20 +89,34 @@
             <!-- Заголовок -->
             <nav class="d-flex justify-content-between align-items-center border-bottom px-3 py-2">
                 <h5 class="mb-0">Чат</h5>
-                <div>
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Выйти</button>
-                    </form>
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm rounded-circle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false"
+                            th:text="${userInitials}"></button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" th:href="@{/projects}">Проекты</a></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="m-0">
+                                <button type="submit" class="dropdown-item">Выйти</button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
             </nav>
 
             <!-- История сообщений -->
             <div class="chat-history">
-                <ul class="list-unstyled mb-0">
-                    <li th:each="msg : ${messages}"
-                        >
-                        <small class="text-muted d-block mb-1" th:text="${msg.timestamp}">12:34</small>
-                        <span th:text="${msg.message}">Текст сообщения</span>
+                <ul class="list-unstyled mb-0" th:if="${messages}">
+                    <li th:each="msg : ${messages}" class="mb-3">
+                        <div class="message sent">
+                            <small class="text-muted d-block mb-1" th:text="${msg.timestamp}"></small>
+                            <strong class="d-block">Вы</strong>
+                            <div th:text="${msg.message}"></div>
+                        </div>
+                        <div class="message received mt-2">
+                            <strong class="d-block">Ответ</strong>
+                            <div th:text="${msg.response}"></div>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -123,11 +140,9 @@
                     <button type="button" class="btn btn-light btn-sm me-1">
                         <i class="bi bi-sliders"></i>
                     </button>
-                    <input type="text"
-                           name="message"
-                           class="form-control form-control-sm me-1"
-                           placeholder="Введите сообщение..."
-                           autocomplete="off" />
+                    <textarea name="message" rows="1"
+                              class="form-control form-control-sm me-1 auto-resize"
+                              placeholder="Введите сообщение..." style="resize:none" autocomplete="off"></textarea>
                     <button type="button" class="btn btn-light btn-sm me-1">
                         <i class="bi bi-mic-fill"></i>
                     </button>
@@ -135,16 +150,6 @@
                         <i class="bi bi-arrow-up-circle-fill"></i>
                     </button>
                 </form>
-                <div th:if="${response}" class="mt-2">
-                    <p class="mb-1">
-                        <strong th:text="${response}">Ответ сервера</strong>
-                    </p>
-                    <pre th:if="${answer}"
-                         th:text="${answer}"
-                         class="small bg-light p-2 rounded">
-Детали ответа
-            </pre>
-                </div>
             </div>
 
         </div>
@@ -155,5 +160,13 @@
 <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
 ></script>
+<script>
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('auto-resize')) {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+        }
+    });
+</script>
 </body>
 </html>
