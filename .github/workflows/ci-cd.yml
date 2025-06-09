@@ -31,16 +31,19 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Check SSH
-        run: hostname && whoami
-    
       - name: Deploy on server via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          password: ${{ secrets.R_SERVER_PASSWORD }}
+          host:     ${{ secrets.SERVER_IP }}
+          port:     22
+          username: deploy
+          password: ${{ secrets.SERVER_PASSWORD }}
           script: |
+            # проверяем, что мы на удалённом сервере
+            hostname
+            whoami
+
+            # дальше идут ваши docker-команды
             docker pull azvonovge/notesai:${{ github.sha }}
             docker stop notesai || true
             docker rm notesai   || true
@@ -54,3 +57,4 @@ jobs:
               -e SERVER_FORWARD_HEADERS_STRATEGY="native" \
               -e SPRING_TOMCAT_REJECT_ILLEGAL_HEADER=false \
               azvonovge/notesai:${{ github.sha }}
+
