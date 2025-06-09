@@ -3,33 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <title>Чат</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        .sidebar {
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .chat-history {
+            flex: 1;
+            padding: 1rem;
+            background: #ffffff;
+            overflow-y: auto;
+        }
+        .message.sent {
+            align-self: flex-end;
+            background: #0d6efd;
+            color: #fff;
+        }
+        .message.received {
+            align-self: flex-start;
+            background: #e9ecef;
+            color: #212529;
+        }
+        .message {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.5rem;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+        .chat-input {
+            padding: 0.5rem;
+            border-top: 1px solid #dee2e6;
+            background: #fff;
+        }
+    </style>
 </head>
 <body>
-<h1>Чат</h1>
-<p><a th:href="@{/projects}">Управление проектами</a></p>
-<form th:action="@{/logout}" method="post" style="display:inline;">
-    <button type="submit">Выйти</button>
-</form>
-<form method="post" th:action="@{/chat}">
-    <select name="projectId">
-        <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
-                th:selected="${p.id == selectedProjectId}"></option>
-    </select>
-    <input type="text" name="message" placeholder="Сообщение" />
-    <button type="submit">Отправить</button>
-</form>
-<div th:if="${response}">
-    <p th:text="${response}"></p>
-    <pre th:if="${answer}" th:text="${answer}"></pre>
+
+<div class="container-fluid h-100">
+    <div class="row g-0 h-100">
+
+        <!-- Сайдбар: проекты -->
+        <aside class="col-auto sidebar p-3">
+            <h6 class="text-muted">Проекты</h6>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    th:each="p : ${projects}"
+                    th:classappend="${p.id == selectedProjectId}? 'active'">
+                    <span th:text="${p.name}">Название проекта</span>
+                    <i class="bi bi-chevron-right"></i>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Основная область: чат -->
+        <div class="col chat-container">
+
+            <!-- Заголовок -->
+            <nav class="d-flex justify-content-between align-items-center border-bottom px-3 py-2">
+                <h5 class="mb-0">Чат</h5>
+                <div>
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Выйти</button>
+                    </form>
+                </div>
+            </nav>
+
+            <!-- История сообщений -->
+            <div class="chat-history">
+                <ul class="list-unstyled mb-0">
+                    <li th:each="msg : ${messages}"
+                        >
+                        <small class="text-muted d-block mb-1" th:text="${msg.timestamp}">12:34</small>
+                        <span th:text="${msg.message}">Текст сообщения</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Поле ввода -->
+            <div class="chat-input">
+                <form class="d-flex align-items-center" method="post" th:action="@{/chat}">
+                    <select name="projectId"
+                            class="form-select form-select-sm me-2"
+                            style="width: 6rem;">
+                        <option th:each="p : ${projects}"
+                                th:value="${p.id}"
+                                th:text="${p.name}"
+                                th:selected="${p.id == selectedProjectId}">
+                        </option>
+                    </select>
+
+                    <button type="button" class="btn btn-light btn-sm me-1">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm me-1">
+                        <i class="bi bi-sliders"></i>
+                    </button>
+                    <input type="text"
+                           name="message"
+                           class="form-control form-control-sm me-1"
+                           placeholder="Введите сообщение..."
+                           autocomplete="off" />
+                    <button type="button" class="btn btn-light btn-sm me-1">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-arrow-up-circle-fill"></i>
+                    </button>
+                </form>
+                <div th:if="${response}" class="mt-2">
+                    <p class="mb-1">
+                        <strong th:text="${response}">Ответ сервера</strong>
+                    </p>
+                    <pre th:if="${answer}"
+                         th:text="${answer}"
+                         class="small bg-light p-2 rounded">
+Детали ответа
+            </pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
-<h2>История сообщений</h2>
-<ul>
-    <li th:each="msg : ${messages}">
-        <span th:text="${msg.timestamp}"></span> :
-        <strong th:text="${msg.message}"></strong>
-        <em th:text="${msg.response}"></em>
-        <span th:text="${msg.project != null ? msg.project.name : 'Без проекта'}"></span>
-    </li>
-</ul>
+
+<!-- Bootstrap JS Bundle -->
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
 </body>
 </html>
