@@ -7,6 +7,10 @@ import ge.azvonov.notesai.service.EmbeddingService.TextEmbedding;
 import ge.azvonov.notesai.db.VectorService;
 import ge.azvonov.notesai.db.ProjectRepository;
 import ge.azvonov.notesai.Project;
+import ge.azvonov.notesai.db.UserRepository;
+import ge.azvonov.notesai.AppUser;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -34,24 +38,38 @@ public class ChatController {
 
     private final ProjectRepository projectRepository;
 
+    private final UserRepository userRepository;
+
     @Autowired
     public ChatController(ChatMessageRepository repository,
                          EmbeddingService embeddingService,
                          VectorService vectorService,
                          ChatService chatService,
-                         ProjectRepository projectRepository) {
+                         ProjectRepository projectRepository,
+                         UserRepository userRepository) {
         this.repository = repository;
         this.embeddingService = embeddingService;
         this.vectorService = vectorService;
         this.chatService = chatService;
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+    }
+
+    private AppUser currentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return userRepository.findByEmail(auth.getName()).orElseThrow();
     }
 
     @GetMapping("/chat")
     public String chat(Model model) {
-        List<ChatMessage> messages = repository.findAll();
+        AppUser user = currentUser();
+        List<ChatMessage> messages = repository.findByUser(user);
         model.addAttribute("messages", messages);
-        model.addAttribute("projects", projectRepository.findAll());
+        List<Project> projects = projectRepository.findByUser(user);
+        model.addAttribute("projects", projects);
+        if (!projects.isEmpty()) {
+            model.addAttribute("selectedProjectId", projects.get(0).getId());
+        }
         return "chat";
     }
 
@@ -60,6 +78,7 @@ public class ChatController {
                              @RequestParam("projectId") Long projectId,
                              @RequestParam(value = "file", required = false) MultipartFile file,
                              Model model) throws IOException {
+        AppUser user = currentUser();
         String fileName = "без файла";
         String fileContent = null;
         if (file != null && !file.isEmpty()) {
@@ -95,12 +114,15 @@ public class ChatController {
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setMessage(message);
         chatMessage.setResponse(answer);
-        projectRepository.findById(projectId).ifPresent(chatMessage::setProject);
+        projectRepository.findById(projectId).filter(p -> p.getUser().equals(user)).ifPresent(chatMessage::setProject);
+        chatMessage.setUser(user);
         repository.save(chatMessage);
 
-        List<ChatMessage> messages = repository.findAll();
+        model.addAttribute("selectedProjectId", projectId);
+
+        List<ChatMessage> messages = repository.findByUser(user);
         model.addAttribute("messages", messages);
-        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("projects", projectRepository.findByUser(user));
         return "chat";
     }
 }

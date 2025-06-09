@@ -12,7 +12,8 @@
 </form>
 <form method="post" enctype="multipart/form-data" th:action="@{/chat}">
     <select name="projectId">
-        <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"></option>
+        <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
+                th:selected="${p.id == selectedProjectId}"></option>
     </select>
     <input type="text" name="message" placeholder="Сообщение" />
     <input type="file" name="file" />
