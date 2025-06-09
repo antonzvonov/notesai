@@ -17,6 +17,10 @@ public class ChatMessage {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private AppUser user;
+
     private LocalDateTime timestamp = LocalDateTime.now();
 
     public Long getId() {
@@ -45,6 +49,14 @@ public class ChatMessage {
 
     public void setProject(Project project) {
         this.project = project;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
     }
 
     public LocalDateTime getTimestamp() {
