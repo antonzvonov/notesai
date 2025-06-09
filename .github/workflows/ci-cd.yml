@@ -6,19 +6,48 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
+
       - name: Build with Maven
         run: mvn clean package -DskipTests
+
       - name: Build Docker image
         run: docker build -t azvonovge/notesai:${{ github.sha }} .
-      - name: Push to registry
+
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           registry: docker.io
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
-      - run: docker push azvonovge/notesai:${{ github.sha }}
+
+      - name: Push image
+        run: docker push azvonovge/notesai:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on server via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: deploy
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            docker pull azvonovge/notesai:${{ github.sha }}
+            docker stop notesai || true
+            docker rm notesai   || true
+            docker run -d \
+              --name notesai \
+              -p 80:8080 \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e SPRING_DATASOURCE_URL="${{ secrets.SPRING_DATASOURCE_URL }}" \
+              -e SPRING_DATASOURCE_USERNAME="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
+              -e SPRING_DATASOURCE_PASSWORD="${{ secrets.SPRING_DATASOURCE_PASSWORD }}" \
+              -e SERVER_FORWARD_HEADERS_STRATEGY="native" \
+              -e SPRING_TOMCAT_REJECT_ILLEGAL_HEADER=false \
+              azvonovge/notesai:${{ github.sha }}
