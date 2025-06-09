@@ -59,15 +59,27 @@ public class ChatController {
     }
 
     @GetMapping("/chat")
-    public String chat(Model model) {
+    public String chat(@RequestParam(value = "projectId", required = false) Long projectId,
+                       Model model) {
         AppUser user = currentUser();
-        List<ChatMessage> messages = repository.findByUser(user);
-        model.addAttribute("messages", messages);
         List<Project> projects = projectRepository.findByUser(user);
         model.addAttribute("projects", projects);
-        if (!projects.isEmpty()) {
-            model.addAttribute("selectedProjectId", projects.get(0).getId());
+
+        if (projectId == null && !projects.isEmpty()) {
+            projectId = projects.get(0).getId();
         }
+
+        if (projectId != null) {
+            model.addAttribute("selectedProjectId", projectId);
+            List<ChatMessage> messages = repository.findByUserAndProjectIdOrderByTimestamp(user, projectId);
+            model.addAttribute("messages", messages);
+        } else {
+            model.addAttribute("messages", List.of());
+        }
+
+        String initials = user.getEmail().substring(0, Math.min(2, user.getEmail().length())).toUpperCase();
+        model.addAttribute("userInitials", initials);
+
         return "chat";
     }
 
@@ -100,9 +112,12 @@ public class ChatController {
 
         model.addAttribute("selectedProjectId", projectId);
 
-        List<ChatMessage> messages = repository.findByUser(user);
+        List<ChatMessage> messages = repository.findByUserAndProjectIdOrderByTimestamp(user, projectId);
         model.addAttribute("messages", messages);
         model.addAttribute("projects", projectRepository.findByUser(user));
+
+        String initials = user.getEmail().substring(0, Math.min(2, user.getEmail().length())).toUpperCase();
+        model.addAttribute("userInitials", initials);
         return "chat";
     }
 }

@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     List<ChatMessage> findByUser(AppUser user);
+
+    List<ChatMessage> findByUserAndProjectIdOrderByTimestamp(AppUser user, Long projectId);
 }
