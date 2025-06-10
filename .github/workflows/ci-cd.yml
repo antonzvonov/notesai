@@ -47,7 +47,7 @@ jobs:
             docker rm notesai   || true
             docker run -d \
               --name notesai \
-              -p 80:8080 \
+              -p 8080:8080 \
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               -e SPRING_DATASOURCE_URL="${{ secrets.SPRING_DATASOURCE_URL }}" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
