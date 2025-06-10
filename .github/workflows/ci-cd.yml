@@ -39,11 +39,8 @@ jobs:
           username: deploy
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # проверяем, что мы на удалённом сервере
             hostname
             whoami
-
-            # дальше идут ваши docker-команды
             docker pull azvonovge/notesai:${{ github.sha }}
             docker stop notesai || true
             docker rm notesai   || true
