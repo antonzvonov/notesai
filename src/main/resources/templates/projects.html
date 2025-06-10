@@ -33,6 +33,11 @@
                 <input type="file" name="file" />
                 <button type="submit">Загрузить</button>
             </form>
+            <form th:action="@{/projects/upload-audio}" method="post" enctype="multipart/form-data" style="margin-bottom:5px;">
+                <input type="hidden" name="projectId" th:value="${proj.id}" />
+                <input type="file" name="file" accept="audio/*" />
+                <button type="submit">Загрузить аудио</button>
+            </form>
             <ul>
                 <li th:each="f : ${files[proj.id]}">
                     <span th:text="${f.name}"></span>

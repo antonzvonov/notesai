@@ -72,6 +72,20 @@ public class VectorService {
         }
     }
 
+    public void saveAudioCaption(long fileId, double start, double end, String speaker, String text) {
+        String sql = "INSERT INTO audio_caption(file_id, start_time, end_time, speaker, text) VALUES(?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, fileId);
+            ps.setDouble(2, start);
+            ps.setDouble(3, end);
+            ps.setString(4, speaker);
+            ps.setString(5, text);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка сохранения титров", e);
+        }
+    }
+
     private PGobject toPgVector(List<Float> vector) throws SQLException {
         PGobject obj = new PGobject();
         obj.setType("vector");

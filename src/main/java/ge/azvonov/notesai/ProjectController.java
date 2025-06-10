@@ -7,8 +7,10 @@ import ge.azvonov.notesai.db.FileMetadata;
 import ge.azvonov.notesai.AppUser;
 import ge.azvonov.notesai.service.EmbeddingService;
 import ge.azvonov.notesai.service.EmbeddingService.TextEmbedding;
+import ge.azvonov.notesai.service.AudioProcessingService;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -28,16 +30,22 @@ public class ProjectController {
     private final UserRepository userRepository;
     private final VectorService vectorService;
     private final EmbeddingService embeddingService;
+    private final AudioProcessingService audioProcessingService;
+
+    @Value("${audio.upload.dir:uploads/audio}")
+    private String audioDir;
 
     @Autowired
     public ProjectController(ProjectRepository repository,
                              UserRepository userRepository,
                              VectorService vectorService,
-                             EmbeddingService embeddingService) {
+                             EmbeddingService embeddingService,
+                             AudioProcessingService audioProcessingService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.vectorService = vectorService;
         this.embeddingService = embeddingService;
+        this.audioProcessingService = audioProcessingService;
     }
 
     private AppUser currentUser() {
@@ -95,6 +103,28 @@ public class ProjectController {
         for (TextEmbedding chunk : textEmbeddings) {
             vectorService.saveTextChunk(fileId, chunk.text(), chunk.vector());
         }
+        return "redirect:/projects";
+    }
+
+    @PostMapping("/upload-audio")
+    public String uploadAudio(@RequestParam Long projectId, @RequestParam("file") MultipartFile file) throws IOException {
+        AppUser user = currentUser();
+        Project project = repository.findById(projectId).orElse(null);
+        if (project == null || !project.getUser().equals(user) || file.isEmpty()) {
+            return "redirect:/projects";
+        }
+        String fileName = file.getOriginalFilename();
+        String ext = "";
+        int dot = fileName.lastIndexOf('.');
+        if (dot >= 0) {
+            ext = fileName.substring(dot + 1);
+        }
+        long fileId = vectorService.saveFileMetadata(projectId, fileName, ext);
+        java.io.File dir = new java.io.File(audioDir);
+        if (!dir.exists()) dir.mkdirs();
+        java.io.File dest = new java.io.File(dir, fileId + "_" + fileName);
+        file.transferTo(dest);
+        audioProcessingService.process(fileId, dest.getAbsolutePath());
         return "redirect:/projects";
     }
 
